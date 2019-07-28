@@ -149,6 +149,3 @@ class CJRDBConnection:
         ses = session()
         return ses
 
-    #def __del__(self):
-    #    if self.db_engine is not None:
-    #        self.db_engine.close()
