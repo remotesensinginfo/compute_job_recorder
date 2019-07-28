@@ -30,6 +30,8 @@ compute_job_recorder - Command to record the status of a compute job.
 # Version 1.0 - Created.
 
 import argparse
+import json
+import cjrlib.cjr_recorder
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -37,15 +39,34 @@ if __name__ == "__main__":
                         choices=["START", "UPDATE", "FINISH"], help="Specify the job status.")
     parser.add_argument("-j", "--jobname", type=str, required=True,
                         help="Specify the job name, a generic name for a group of jobs.")
-    parser.add_argument("-d", "--jobid", type=str, required=True,
+    parser.add_argument("-t", "--taskid", type=str, required=True,
                         help="Specify a job ID, unique within the 'jobname'.")
-    parser.add_argument("-i", "--info", type=str, required=True,
-                        help='''Specify the status info, this is stored in JSON so if provided in that format then it 
-                                is retained:
+    parser.add_argument("-v", "--version", type=int, default=0, required=False,
+                        help="Specify the version of the job and task.")
+    parser.add_argument("-i", "--taskinfo", type=str, required=True,
+                        help='''Specify the status info, this is stored in JSON and should be provided in that format:
                                 * START - input parameters, helpful to include enough information to re-run the job.
                                 * UPDATE - any information on job progress.
                                 * FINISH - information on completion.
                              ''')
+    parser.add_argument("--printprogress", action='store_true', default=False,
+                        help="Specify that progress statements should be printed to the console - "
+                             "useful for debugging.")
 
     args = parser.parse_args()
 
+    if args.status == "START":
+        status = cjrlib.cjr_recorder.JobStatus.START
+    elif args.status == "FINISH":
+        status = cjrlib.cjr_recorder.JobStatus.FINISH
+    elif args.status == "UPDATE":
+        status = cjrlib.cjr_recorder.JobStatus.UPDATE
+    else:
+        raise Exception("Status provided was not recognised.")
+
+    # Parse the
+    task_info_str = args.taskinfo
+    task_info_dict = json.loads(task_info_str)
+
+    cjrlib.cjr_recorder.record_task_status(status, args.jobname, args.taskid, args.version,
+                                           task_info_dict, args.printprogress)

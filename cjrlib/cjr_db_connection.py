@@ -30,129 +30,101 @@ cjr_db_connection - DB Connection class. Singleton class to reuse database conne
 # History:
 # Version 1.0 - Created.
 
-import configparser.ConfigParser
-import psycopg2
+import sqlalchemy
+import sqlalchemy.orm
+from sqlalchemy.ext.declarative import declarative_base
 import os
 import os.path
-import logging
 
-logger = logging.getLogger(__name__)
+Base = declarative_base()
 
-def parse_db_config(filename='database.ini', section='postgresql'):
-    """
-    Parse a database configuration file. The configuration file
-    should have the following format:
 
-    [postgresql]
-    host=localhost
-    port=5432
-    dbname=cjr_records
-    username=postgres
-    password=postgres
+class CJRJobName(Base):
+    __tablename__ = "CJRJobName"
+    JobName = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
 
-    :param filename: file name and path to the configuration file.
-    :param section: name of the section within the configure file.
-    :return: return dict with database connection info
-    """
-    # create a parser
-    parser = configparser.ConfigParser()
-    # read config file
-    parser.read(filename)
 
-    # get section, default to postgresql
-    db_info = {}
-    db_info['db_conn_info'] = dict()
-    if parser.has_section(section):
-        params = parser.items(section)
-        for param in params:
-            db_info['db_conn_info'][param[0]] = param[1]
-    else:
-        raise Exception('Section {0} not found in the {1} file'.format(section, filename))
-
-    return db_info
-
+class CJRTaskInfo(Base):
+    __tablename__ = "CJRTaskInfo"
+    TaskID = sqlalchemy.Column(sqlalchemy.String, primary_key=True)
+    JobName = sqlalchemy.Column(sqlalchemy.String, sqlalchemy.ForeignKey("CJRJobName.JobName"), primary_key=True)
+    Version = sqlalchemy.Column(sqlalchemy.INTEGER, primary_key=True)
+    StartTime = sqlalchemy.Column(sqlalchemy.DateTime)
+    EndTime = sqlalchemy.Column(sqlalchemy.DateTime)
+    TaskParams = sqlalchemy.Column(sqlalchemy.JSON)
+    TaskUpdates = sqlalchemy.Column(sqlalchemy.JSON)
+    TaskEndInfo = sqlalchemy.Column(sqlalchemy.JSON)
+    TaskCompleted = sqlalchemy.Column(sqlalchemy.Boolean, default=False)
 
 class CJRDBConnection:
     """
     Database connection class
     """
     _instance = None
+    print_progress = False
 
     def __new__(cls):
+        """
+        Function which creates the DB connection object as a singularity model.
+        """
         if cls._instance is None:
             cls._instance = object.__new__(cls)
 
             try:
-                ini_db_file = os.environ['CJR_DB_CONFIG']
+                cls._instance.cjr_db_file = os.environ['CJR_DB_FILE']
             except Exception:
-                raise Exception("""Environmental variable CJR_DB_CONFIG was not defined and therefore
-                                   the database connection information could not be found.""")
+                raise Exception("""Environmental variable CJR_DB_FILE was not defined and therefore
+                                   the database file has not been specified.""")
 
             try:
-                ini_db_file_section = os.environ['CJR_DB_CONFIG_SECTION']
-            except Exception:
-                ini_db_file_section = 'postgresql'
-
-            if not os.path.exists(ini_db_file):
-                raise Exception("Database connection ini file could not be found '{}'".format(ini_db_file))
-
-            db_config_info = parse_db_config(ini_db_file, ini_db_file_section)
-
-            db_config = dict()
-            if 'host' in db_config_info['db_conn_info']:
-                db_config['host'] = db_config_info['db_conn_info']['host']
-            else:
-                raise Exception("The database 'host' was not given.")
-
-            if 'port' in db_config_info['db_conn_info']:
-                db_config['port'] = int(db_config_info['db_conn_info']['port'])
-            else:
-                db_config['port'] = 5432
-
-            if 'dbname' in db_config_info['db_conn_info']:
-                db_config['dbname'] = db_config_info['db_conn_info']['dbname']
-            else:
-                raise Exception("The database name ('dbnmae') was not given.")
-
-            if 'username' in db_config_info['db_conn_info']:
-                db_config['user'] = db_config_info['db_conn_info']['username']
-            else:
-                raise Exception("The database 'username' was not given.")
-
-            if 'password' in db_config_info['db_conn_info']:
-                db_config['password'] = db_config_info['db_conn_info']['password']
-            else:
-                raise Exception("The database 'password' was not given.")
-
-            try:
-                print('Connecting to PostgreSQL database...')
-                connection = CJRDBConnection._instance.connection = psycopg2.connect(**db_config)
-                cursor = CJRDBConnection._instance.cursor = connection.cursor()
-                cursor.execute('SELECT VERSION()')
-                db_version = cursor.fetchone()
-
+                cls._instance.db_engine = sqlalchemy.create_engine(cls._instance.cjr_db_file)
             except Exception as error:
                 print('Error: connection not established {}'.format(error))
-                CJRDBConnection._instance = None
-
-            else:
-                print('connection established\n{}'.format(db_version[0]))
+                cls._instance = None
 
         return cls._instance
 
     def __init__(self):
-        self.connection = self._instance.connection
-        self.cursor = self._instance.cursor
+        self.db_engine = self._instance.db_engine
+        self.cjr_db_file = self._instance.cjr_db_file
 
-    def query(self, query):
-        try:
-            result = self.cursor.execute(query)
-        except Exception as error:
-            print('error execting query "{}", error: {}'.format(query, error))
-            return None
-        else:
-            return result
+    def set_print_progress(self, print_progress=False):
+        """
+        Function which defines the parameter print_progress. If True then progress information will be printed to
+        the console. If False then it will not be printed (Default).
 
-    def __del__(self):
-        self.connection.close()
-        self.cursor.close()
+        :param print_progress: boolean on whether progress is printed to the console or not.
+
+        """
+        self.print_progress = print_progress
+
+    def create_db_tables(self):
+        """
+        A function which checks whether Tables exist and if they don't
+        then create the DB Tables.
+        """
+        if self.print_progress:
+            print("Check whether the tables were already present.")
+        if not self.db_engine.dialect.has_table(self.db_engine, "CJRJobName"):
+            if self.print_progress:
+                print("Drop usage table if within the existing database.")
+            Base.metadata.drop_all(self.db_engine)
+
+            if self.print_progress:
+                print("Creating Usage Database.")
+            Base.metadata.bind = self.db_engine
+            Base.metadata.create_all()
+
+    def get_db_session(self):
+        """
+        Get a database session object.
+
+        :return: return an sqlalchemy session object.
+        """
+        session = sqlalchemy.orm.sessionmaker(bind=self.db_engine)
+        ses = session()
+        return ses
+
+    #def __del__(self):
+    #    if self.db_engine is not None:
+    #        self.db_engine.close()

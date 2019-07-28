@@ -44,23 +44,6 @@ CJR_VERSION_OBJ = LooseVersion(CJR_VERSION)
 
 CJR_COPYRIGHT_YEAR = "2019"
 CJR_COPYRIGHT_NAMES = "Pete Bunting"
-
-CJR_SUPPORT_EMAIL = "rsgislib-support@googlegroups.com"
-
+CJR_SUPPORT_EMAIL = "pete.bunting@aber.ac.uk"
 CJR_WEBSITE = "https://www.remotesensing.info/cjr"
 
-
-install_prefix = __file__[:__file__.find('lib')]
-log_config_path = os.path.join(install_prefix, "share", "cjrlib", "loggingconfig.json")
-log_default_level=logging.INFO
-
-log_config_value = os.getenv('CJR_LOG_CFG', None)
-if log_config_value:
-    log_config_path = log_config_value
-if os.path.exists(log_config_path):
-    with open(log_config_path, 'rt') as f:
-        config = json.load(f)
-    logging.config.dictConfig(config)
-else:
-    print('Warning: did not find the logging configuration file.')
-    logging.basicConfig(level=log_default_level)
