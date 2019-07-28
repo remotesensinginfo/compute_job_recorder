@@ -71,20 +71,13 @@ def task_to_dict(task_rcd):
     task_dict['task_id'] = task_rcd.TaskID
     task_dict['job_name'] = task_rcd.JobName
     task_dict['version'] = task_rcd.Version
-    start_time_str = task_rcd.StartTime
-    if (start_time_str is None) or (start_time_str == ""):
-        task_dict['start_time'] = None
-    else:
-        task_dict['start_time'] = datetime.datetime.fromisoformat(start_time_str)
-    end_time_str = task_rcd.EndTime
-    if (end_time_str is None) or (end_time_str == ""):
-        task_dict['end_time'] = None
-    else:
-        task_dict['end_time'] = datetime.datetime.fromisoformat(end_time_str)
+    task_dict['start_time'] = task_rcd.StartTime
+    task_dict['end_time'] = task_rcd.EndTime
     task_dict['params'] = task_rcd.TaskParams
     task_dict['update_info'] = task_rcd.TaskUpdates
     task_dict['end_info'] = task_rcd.TaskEndInfo
     task_dict['completed'] = task_rcd.TaskCompleted
+    return task_dict
 
 
 class CJRDBConnection:

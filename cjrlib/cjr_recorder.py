@@ -169,13 +169,11 @@ def record_task_update(job_name, task_id, version, task_info, cjrdb_conn, print_
 
         update_time = datetime.datetime.now()
         task_updates_info = qury_rslt.TaskUpdates
-        print(type(task_updates_info).__name__)
         if task_updates_info is None:
             lcl_task_updates_info = dict()
         else:
             lcl_task_updates_info = copy.deepcopy(task_updates_info)
         lcl_task_updates_info[update_time.isoformat()] = task_info
-        print(lcl_task_updates_info)
         qury_rslt.TaskUpdates = lcl_task_updates_info
     else:
         db_ses_obj.close()

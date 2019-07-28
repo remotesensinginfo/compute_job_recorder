@@ -44,12 +44,12 @@ if __name__ == "__main__":
                         help="Specify a job ID, unique within the 'jobname'.")
     parser.add_argument("-v", "--version", type=int, default=0, required=False,
                         help="Specify the version of the job and task.")
-    parser.add_argument("-h", "--help", action='store_true', default=False,
+    parser.add_argument("--queryhelp", action='store_true', default=False,
                         help="Get help for the command, if specify a query then help for that query will be printed.")
 
     args = parser.parse_args()
 
-    if args.help:
+    if args.queryhelp:
         if args.query == "JOBS":
             print("Prints a list of job names.")
             print("\tDoes not require any inputs.")
