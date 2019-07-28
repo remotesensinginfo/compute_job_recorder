@@ -35,6 +35,7 @@ import sqlalchemy.orm
 from sqlalchemy.ext.declarative import declarative_base
 import os
 import os.path
+import datetime
 
 Base = declarative_base()
 
@@ -55,6 +56,36 @@ class CJRTaskInfo(Base):
     TaskUpdates = sqlalchemy.Column(sqlalchemy.JSON)
     TaskEndInfo = sqlalchemy.Column(sqlalchemy.JSON)
     TaskCompleted = sqlalchemy.Column(sqlalchemy.Boolean, default=False)
+
+
+def task_to_dict(task_rcd):
+    """
+    A function to convert a CJRTaskInfo record to a dictionary
+
+    :param task_rcd: record from the CJRTaskInfo table.
+
+    :return: returns a dictionary
+
+    """
+    task_dict = dict()
+    task_dict['task_id'] = task_rcd.TaskID
+    task_dict['job_name'] = task_rcd.JobName
+    task_dict['version'] = task_rcd.Version
+    start_time_str = task_rcd.StartTime
+    if (start_time_str is None) or (start_time_str == ""):
+        task_dict['start_time'] = None
+    else:
+        task_dict['start_time'] = datetime.datetime.fromisoformat(start_time_str)
+    end_time_str = task_rcd.EndTime
+    if (end_time_str is None) or (end_time_str == ""):
+        task_dict['end_time'] = None
+    else:
+        task_dict['end_time'] = datetime.datetime.fromisoformat(end_time_str)
+    task_dict['params'] = task_rcd.TaskParams
+    task_dict['update_info'] = task_rcd.TaskUpdates
+    task_dict['end_info'] = task_rcd.TaskEndInfo
+    task_dict['completed'] = task_rcd.TaskCompleted
+
 
 class CJRDBConnection:
     """

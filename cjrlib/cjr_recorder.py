@@ -54,7 +54,7 @@ def record_task_status(status, job_name, task_id, version, task_info, print_prog
     :param print_progress: a boolean to specify whether an feedback should be printed to the console (Default: False)
 
     """
-    cjrdb_conn = CJRDBConnection()#print_progress)
+    cjrdb_conn = CJRDBConnection()
     if cjrdb_conn is None:
         raise Exception("Could not create the connection object...")
     cjrdb_conn.create_db_tables()
