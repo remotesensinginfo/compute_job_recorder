@@ -29,23 +29,26 @@ cjr_queries - Class to query job progress database.
 # History:
 # Version 1.0 - Created.
 
-import datetime
+import sqlalchemy
 from cjrlib.cjr_db_connection import CJRDBConnection, CJRJobName, CJRTaskInfo, task_to_dict
 
 
-def query_job_names():
+def query_job_names(cjr_db_file=None):
     """
     A function to retrieve a list of job names within the database.
 
     :return: list of strings.
 
     """
-    cjrdb_conn = CJRDBConnection()
-    if cjrdb_conn is None:
-        raise Exception("Could not create the connection object...")
-    cjrdb_conn.create_db_tables()
-
-    db_ses_obj = cjrdb_conn.get_db_session()
+    if cjr_db_file is None:
+        cjrdb_conn = CJRDBConnection()
+        if cjrdb_conn is None:
+            raise Exception("Could not create the connection object...")
+        db_ses_obj = cjrdb_conn.get_db_session()
+    else:
+        db_engine = sqlalchemy.create_engine(cjr_db_file)
+        ses_sqlalc = sqlalchemy.orm.sessionmaker(bind=db_engine)
+        db_ses_obj = ses_sqlalc()
 
     job_names = list()
     qury_rslt = db_ses_obj.query(CJRJobName).all()
@@ -56,19 +59,23 @@ def query_job_names():
 
     return job_names
 
-def get_job_versions(job_name):
+def get_job_versions(job_name, cjr_db_file=None):
     """
     A function which retrieves the list of versions available for a job.
     :param job_name: the name of the job
     :return: list of integers
     """
-    cjrdb_conn = CJRDBConnection()
-    if cjrdb_conn is None:
-        raise Exception("Could not create the connection object...")
-    cjrdb_conn.create_db_tables()
+    if cjr_db_file is None:
+        cjrdb_conn = CJRDBConnection()
+        if cjrdb_conn is None:
+            raise Exception("Could not create the connection object...")
+        db_ses_obj = cjrdb_conn.get_db_session()
+    else:
+        db_engine = sqlalchemy.create_engine(cjr_db_file)
+        ses_sqlalc = sqlalchemy.orm.sessionmaker(bind=db_engine)
+        db_ses_obj = ses_sqlalc()
 
     versions_lst = list()
-    db_ses_obj = cjrdb_conn.get_db_session()
     qury_rslt = db_ses_obj.query(CJRTaskInfo.Version).filter(CJRTaskInfo.JobName == job_name).distinct().all()
     if qury_rslt is not None:
         for version_rcd in qury_rslt:
@@ -78,7 +85,7 @@ def get_job_versions(job_name):
     return versions_lst
 
 
-def get_all_tasks(job_name, version, datetimeobjs=False):
+def get_all_tasks(job_name, version, datetimeobjs=False, cjr_db_file=None):
     """
     A function which retrieves all the tasks associated with a job and version
 
@@ -87,12 +94,15 @@ def get_all_tasks(job_name, version, datetimeobjs=False):
 
     :return: returns a list of dictionaries of the tasks
     """
-    cjrdb_conn = CJRDBConnection()
-    if cjrdb_conn is None:
-        raise Exception("Could not create the connection object...")
-    cjrdb_conn.create_db_tables()
-
-    db_ses_obj = cjrdb_conn.get_db_session()
+    if cjr_db_file is None:
+        cjrdb_conn = CJRDBConnection()
+        if cjrdb_conn is None:
+            raise Exception("Could not create the connection object...")
+        db_ses_obj = cjrdb_conn.get_db_session()
+    else:
+        db_engine = sqlalchemy.create_engine(cjr_db_file)
+        ses_sqlalc = sqlalchemy.orm.sessionmaker(bind=db_engine)
+        db_ses_obj = ses_sqlalc()
 
     task_lst = list()
     qury_rslt = db_ses_obj.query(CJRTaskInfo).filter(CJRTaskInfo.JobName == job_name,
@@ -105,7 +115,7 @@ def get_all_tasks(job_name, version, datetimeobjs=False):
     return task_lst
 
 
-def get_uncompleted_tasks(job_name, version, datetimeobjs=False):
+def get_uncompleted_tasks(job_name, version, datetimeobjs=False, cjr_db_file=None):
     """
     A function which retrieves the uncompleted tasks associated with a job and version
 
@@ -114,12 +124,15 @@ def get_uncompleted_tasks(job_name, version, datetimeobjs=False):
 
     :return: returns a list of dictionaries of the tasks
     """
-    cjrdb_conn = CJRDBConnection()
-    if cjrdb_conn is None:
-        raise Exception("Could not create the connection object...")
-    cjrdb_conn.create_db_tables()
-
-    db_ses_obj = cjrdb_conn.get_db_session()
+    if cjr_db_file is None:
+        cjrdb_conn = CJRDBConnection()
+        if cjrdb_conn is None:
+            raise Exception("Could not create the connection object...")
+        db_ses_obj = cjrdb_conn.get_db_session()
+    else:
+        db_engine = sqlalchemy.create_engine(cjr_db_file)
+        ses_sqlalc = sqlalchemy.orm.sessionmaker(bind=db_engine)
+        db_ses_obj = ses_sqlalc()
 
     task_lst = list()
     qury_rslt = db_ses_obj.query(CJRTaskInfo).filter(CJRTaskInfo.JobName == job_name,
@@ -133,7 +146,7 @@ def get_uncompleted_tasks(job_name, version, datetimeobjs=False):
     return task_lst
 
 
-def get_task(job_name, task_id, version, datetimeobjs=False):
+def get_task(job_name, task_id, version, datetimeobjs=False, cjr_db_file=None):
     """
     A function which retrieves the tasks associated with a job name and ID.
 
@@ -143,12 +156,15 @@ def get_task(job_name, task_id, version, datetimeobjs=False):
 
     :return: returns a dictionary of the task or None if not task not present
     """
-    cjrdb_conn = CJRDBConnection()
-    if cjrdb_conn is None:
-        raise Exception("Could not create the connection object...")
-    cjrdb_conn.create_db_tables()
-
-    db_ses_obj = cjrdb_conn.get_db_session()
+    if cjr_db_file is None:
+        cjrdb_conn = CJRDBConnection()
+        if cjrdb_conn is None:
+            raise Exception("Could not create the connection object...")
+        db_ses_obj = cjrdb_conn.get_db_session()
+    else:
+        db_engine = sqlalchemy.create_engine(cjr_db_file)
+        ses_sqlalc = sqlalchemy.orm.sessionmaker(bind=db_engine)
+        db_ses_obj = ses_sqlalc()
 
     task_lst = list()
     qury_rslt = db_ses_obj.query(CJRTaskInfo).filter(CJRTaskInfo.JobName == job_name,
