@@ -68,6 +68,7 @@ if __name__ == "__main__":
             print("\tProvide:")
             print("\t\t --jobname <string>")
             print("\t\t --taskid <string>")
+            print("\t\t --version <integer>")
         else:
             raise Exception("Query type provided was not recognised.")
     else:
@@ -78,17 +79,16 @@ if __name__ == "__main__":
                 print("{}: {}".format(i, job_name))
                 i = i + 1
         elif args.query == "ALLTASKS":
-            tasks_dict = cjrlib.cjr_queries.get_all_tasks(args.jobname, args.version)
+            tasks_dict = cjrlib.cjr_queries.get_all_tasks(args.jobname, args.version, datetimeobjs=True)
             for task in tasks_dict:
                 pprint.pprint(task)
         elif args.query == "INCOMPLETE":
-            tasks_dict = cjrlib.cjr_queries.get_uncompleted_tasks(args.jobname, args.version)
+            tasks_dict = cjrlib.cjr_queries.get_uncompleted_tasks(args.jobname, args.version, datetimeobjs=True)
             for task in tasks_dict:
                 pprint.pprint(task)
         elif args.query == "TASK":
-            tasks_dict = cjrlib.cjr_queries.get_tasks(args.jobname, args.taskid)
-            for task in tasks_dict:
-                pprint.pprint(task)
+            task_dict = cjrlib.cjr_queries.get_task(args.jobname, args.taskid, args.version, datetimeobjs=True)
+            pprint.pprint(task_dict)
         else:
             raise Exception("Query type provided was not recognised.")
 

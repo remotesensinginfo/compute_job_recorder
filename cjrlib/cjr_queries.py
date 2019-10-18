@@ -56,15 +56,36 @@ def query_job_names():
 
     return job_names
 
+def get_job_versions(job_name):
+    """
+    A function which retrieves the list of versions available for a job.
+    :param job_name: the name of the job
+    :return: list of integers
+    """
+    cjrdb_conn = CJRDBConnection()
+    if cjrdb_conn is None:
+        raise Exception("Could not create the connection object...")
+    cjrdb_conn.create_db_tables()
 
-def get_all_tasks(job_name, version):
+    versions_lst = list()
+    db_ses_obj = cjrdb_conn.get_db_session()
+    qury_rslt = db_ses_obj.query(CJRTaskInfo.Version).filter(CJRTaskInfo.JobName == job_name).distinct().all()
+    if qury_rslt is not None:
+        for version_rcd in qury_rslt:
+            versions_lst.append(version_rcd.Version)
+    db_ses_obj.close()
+
+    return versions_lst
+
+
+def get_all_tasks(job_name, version, datetimeobjs=False):
     """
     A function which retrieves all the tasks associated with a job and version
 
     :param job_name: a string for the name of the job
     :param version: an integer for the version of the task.
 
-    :return: returns a dictionary of the tasks
+    :return: returns a list of dictionaries of the tasks
     """
     cjrdb_conn = CJRDBConnection()
     if cjrdb_conn is None:
@@ -74,24 +95,24 @@ def get_all_tasks(job_name, version):
     db_ses_obj = cjrdb_conn.get_db_session()
 
     task_lst = list()
-    qury_rslt = db_ses_obj.query(CJRTaskInfo).filter(CJRTaskInfo.JobName == job_name).\
-                                              filter(CJRTaskInfo.Version == version).all()
+    qury_rslt = db_ses_obj.query(CJRTaskInfo).filter(CJRTaskInfo.JobName == job_name,
+                                                     CJRTaskInfo.Version == version).all()
     if qury_rslt is not None:
         for task_rcd in qury_rslt:
-            task_lst.append(task_to_dict(task_rcd))
+            task_lst.append(task_to_dict(task_rcd, datetimeobjs))
     db_ses_obj.close()
 
     return task_lst
 
 
-def get_uncompleted_tasks(job_name, version):
+def get_uncompleted_tasks(job_name, version, datetimeobjs=False):
     """
     A function which retrieves the uncompleted tasks associated with a job and version
 
     :param job_name: a string for the name of the job
     :param version: an integer for the version of the task.
 
-    :return: returns a dictionary of the tasks
+    :return: returns a list of dictionaries of the tasks
     """
     cjrdb_conn = CJRDBConnection()
     if cjrdb_conn is None:
@@ -101,25 +122,26 @@ def get_uncompleted_tasks(job_name, version):
     db_ses_obj = cjrdb_conn.get_db_session()
 
     task_lst = list()
-    qury_rslt = db_ses_obj.query(CJRTaskInfo).filter(CJRTaskInfo.JobName == job_name).\
-                                              filter(CJRTaskInfo.Version == version).\
-                                              filter(CJRTaskInfo.TaskCompleted == False).all()
+    qury_rslt = db_ses_obj.query(CJRTaskInfo).filter(CJRTaskInfo.JobName == job_name,
+                                                     CJRTaskInfo.Version == version,
+                                                     CJRTaskInfo.TaskCompleted == False).all()
     if qury_rslt is not None:
         for task_rcd in qury_rslt:
-            task_lst.append(task_to_dict(task_rcd))
+            task_lst.append(task_to_dict(task_rcd, datetimeobjs))
     db_ses_obj.close()
 
     return task_lst
 
 
-def get_tasks(job_name, task_id):
+def get_task(job_name, task_id, version, datetimeobjs=False):
     """
-    A function which retrieves the uncompleted tasks associated with a job and version
+    A function which retrieves the tasks associated with a job name and ID.
 
     :param job_name: a string for the name of the job
     :param task_id: n string for the task ID.
+    :param version: an integer for the version of the task.
 
-    :return: returns a dictionary of the tasks
+    :return: returns a dictionary of the task or None if not task not present
     """
     cjrdb_conn = CJRDBConnection()
     if cjrdb_conn is None:
@@ -129,11 +151,12 @@ def get_tasks(job_name, task_id):
     db_ses_obj = cjrdb_conn.get_db_session()
 
     task_lst = list()
-    qury_rslt = db_ses_obj.query(CJRTaskInfo).filter(CJRTaskInfo.JobName == job_name).\
-                                              filter(CJRTaskInfo.TaskID == task_id).all()
+    qury_rslt = db_ses_obj.query(CJRTaskInfo).filter(CJRTaskInfo.JobName == job_name,
+                                                     CJRTaskInfo.TaskID == task_id,
+                                                     CJRTaskInfo.Version == version).one_or_none()
+    task = None
     if qury_rslt is not None:
-        for task_rcd in qury_rslt:
-            task_lst.append(task_to_dict(task_rcd))
+        task = task_to_dict(qury_rslt, datetimeobjs)
     db_ses_obj.close()
 
-    return task_lst
+    return task

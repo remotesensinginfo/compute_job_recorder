@@ -36,8 +36,8 @@ import json
 from distutils.version import LooseVersion
 
 CJR_VERSION_MAJOR = 0
-CJR_VERSION_MINOR = 0
-CJR_VERSION_PATCH = 1
+CJR_VERSION_MINOR = 1
+CJR_VERSION_PATCH = 0
 
 CJR_VERSION = str(CJR_VERSION_MAJOR) + "."  + str(CJR_VERSION_MINOR) + "." + str(CJR_VERSION_PATCH)
 CJR_VERSION_OBJ = LooseVersion(CJR_VERSION)

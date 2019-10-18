@@ -58,21 +58,43 @@ class CJRTaskInfo(Base):
     TaskCompleted = sqlalchemy.Column(sqlalchemy.Boolean, default=False)
 
 
-def task_to_dict(task_rcd):
+def task_to_dict(task_rcd, datetimeobjs=False):
     """
     A function to convert a CJRTaskInfo record to a dictionary
 
     :param task_rcd: record from the CJRTaskInfo table.
+    :param datetimeobjs: If true the start_time and end_time fields are outputted as python datetime objects rather than
+                         nested dictionaries.
 
     :return: returns a dictionary
-
     """
     task_dict = dict()
     task_dict['task_id'] = task_rcd.TaskID
     task_dict['job_name'] = task_rcd.JobName
     task_dict['version'] = task_rcd.Version
-    task_dict['start_time'] = task_rcd.StartTime
-    task_dict['end_time'] = task_rcd.EndTime
+    if datetimeobjs:
+        task_dict['start'] = task_rcd.StartTime
+        if task_rcd.TaskCompleted:
+            task_dict['end'] = task_rcd.EndTime
+        else:
+            task_dict['end'] = None
+    else:
+        task_dict['start'] = dict()
+        task_dict['start']['year'] = task_rcd.StartTime.year
+        task_dict['start']['month'] = task_rcd.StartTime.month
+        task_dict['start']['day'] = task_rcd.StartTime.day
+        task_dict['start']['hour'] = task_rcd.StartTime.hour
+        task_dict['start']['minute'] = task_rcd.StartTime.minute
+        task_dict['start']['second'] = task_rcd.StartTime.second
+        task_dict['end'] = dict()
+        if task_rcd.TaskCompleted:
+            task_dict['end']['year'] = task_rcd.EndTime.year
+            task_dict['end']['month'] = task_rcd.EndTime.month
+            task_dict['end']['day'] = task_rcd.EndTime.day
+            task_dict['end']['hour'] = task_rcd.EndTime.hour
+            task_dict['end']['minute'] = task_rcd.EndTime.minute
+            task_dict['end']['second'] = task_rcd.EndTime.second
+
     task_dict['params'] = task_rcd.TaskParams
     task_dict['update_info'] = task_rcd.TaskUpdates
     task_dict['end_info'] = task_rcd.TaskEndInfo
@@ -149,3 +171,10 @@ class CJRDBConnection:
         ses = session()
         return ses
 
+    def delete_obj(self):
+        self.db_engine.dispose()
+        self.cjr_db_file = ""
+
+    def refresh_db(self):
+        self.cjr_db_file = os.environ['CJR_DB_FILE']
+        self.db_engine = sqlalchemy.create_engine(self.cjr_db_file)
