@@ -33,11 +33,12 @@ $ python setup.py install
 # History:
 # Version 1.0 - Created.
 
+import setuptools
 from distutils.core import setup
 import os
 
 setup(name='ComputeJobRecorder',
-    version='0.1.0',
+    version='0.1.1',
     description='A tool for recording a compute job progress.',
     author='Pete Bunting',
     author_email='pfb@aber.ac.uk',

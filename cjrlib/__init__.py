@@ -31,13 +31,11 @@ cjr_db_connection - DB Connection class. Singleton class to reuse database conne
 # Version 1.0 - Created.
 
 import logging
-import os.path
-import json
 from distutils.version import LooseVersion
 
 CJR_VERSION_MAJOR = 0
 CJR_VERSION_MINOR = 1
-CJR_VERSION_PATCH = 0
+CJR_VERSION_PATCH = 1
 
 CJR_VERSION = str(CJR_VERSION_MAJOR) + "."  + str(CJR_VERSION_MINOR) + "." + str(CJR_VERSION_PATCH)
 CJR_VERSION_OBJ = LooseVersion(CJR_VERSION)
